@@ -267,5 +267,19 @@ class Curl {
         
 
     }
+    /**
+     * Enable cookie usage
+     *
+     * @return void
+     */
+    public function useCookieFile() {
+
+        $this->curl_opation([
+            CURLOPT_COOKIEJAR => $this->cookie_path,
+            CURLOPT_COOKIE => "cookiename=0",
+            CURLOPT_COOKIEFILE => $this->cookie_path
+        ]);
+
+    }
 
 }
