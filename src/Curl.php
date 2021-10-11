@@ -102,25 +102,34 @@ class Curl {
      * Get an array of curl options and auto-adjust
      *
      * @param array $opations
-     * @return void
+     * 
      */
     protected function curl_opation(array $opations) {
 
-        # Enter each member of the array as the key and the value of the option
-        foreach($opations as $opation => $value)
-            curl_setopt($this->curl , $opation , $value);
+        curl_setopt_array($this->curl , $opations);
 
+    }
+
+    /**
+     * Add custom option to curl
+     *
+     * @param $opation
+     * @param mixed $value
+     * @return void
+     */
+    public function curl_set_opt($opation , $value) {
+        curl_setopt($this->curl , $opation , $value);
     }
 
     /**
      * Get sending method
      *
      * @param string $method
-     * @return void
+     * 
      */
     public function method(string $method) {
 
-        $this->method = $method;
+        $this->method = strtoupper($method);
 
         return $this;
     }
@@ -128,10 +137,10 @@ class Curl {
     /**
      * Get the parameters to be sent
      *
-     * @param array $params
-     * @return void
+     * @param mixed $params
+     * 
      */
-    public function params(array $params) {
+    public function params($params) {
 
         $this->params = $params;
 
@@ -143,7 +152,7 @@ class Curl {
      * Change the default useragent
      *
      * @param string $useragent
-     * @return void
+     * 
      */
     public function useragent(string $useragent) {
 
@@ -157,7 +166,7 @@ class Curl {
      * Get a proxy server as an array
      *
      * @param array $proxy
-     * @return void
+     * 
      */
     public function proxy(array $proxy) {
 
@@ -179,6 +188,12 @@ class Curl {
 
     }
 
+    /**
+     * Receive and save custom headers
+     *
+     * @param array $headers
+     * 
+     */
     public function headers(array $headers) {
 
         $this->headers = $headers;
@@ -187,8 +202,70 @@ class Curl {
 
     }
 
-    
+    /**
+     * Prepare values ​​to send requests
+     *
+     * @param string $url
+     * @param string $method
+     * @param mixed $params
+     * @param array $headers
+     * @param array $proxy
+     * @return self
+     */
+    public function request(string $url = null , string $method = null , $params = null , array $headers = [] , array $proxy = []) {
 
+        if(!is_null($url)) {
+            $this->url = $url;
+        }
 
+        if(!is_null($method)) {
+            $this->method(strtoupper($method));
+        }
+
+        if(!empty($params)) {
+            $this->params($params);
+        }
+
+        if(!empty($headers)) {
+            $this->headers($headers);
+        }
+
+        if(!empty($proxy)) {
+            $this->proxy($proxy);
+        }
+
+        
+
+        return $this;
+
+    }
+
+    /**
+     * Send data and return output
+     *
+     * @return string
+     */
+    public function send() {
+
+        if($this->method == 'GET') {
+            $this->url .= '?' . http_build_query($this->params);
+        }
+
+        $this->curl_opation([
+            CURLOPT_URL => $this->url,
+            CURLOPT_USERAGENT => $this->useragent,
+            CURLOPT_CUSTOMREQUEST => $this->method ,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POSTFIELDS => http_build_query($this->params)
+        ]);
+        
+
+        $responve = curl_exec($this->curl);
+        $error = curl_error($this->curl);
+        if(!$error)
+            return $responve;
+        
+
+    }
 
 }
