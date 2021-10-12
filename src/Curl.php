@@ -210,9 +210,9 @@ class Curl {
      * @param mixed $params
      * @param array $headers
      * @param array $proxy
-     * @return self
+     * 
      */
-    public function request(string $url = null , string $method = null , $params = null , array $headers = [] , array $proxy = []) {
+    public function request(string $method = null , $params = null , string $url = null ,array $headers = [] , array $proxy = []) {
 
         if(!is_null($url)) {
             $this->url = $url;
@@ -247,7 +247,8 @@ class Curl {
      */
     public function send() {
 
-        if($this->method == 'GET') {
+        if($this->method == 'GET' && !empty($this->params) && is_array($this->params)) {
+            
             $this->url .= '?' . http_build_query($this->params);
         }
 
@@ -256,14 +257,17 @@ class Curl {
             CURLOPT_USERAGENT => $this->useragent,
             CURLOPT_CUSTOMREQUEST => $this->method ,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POSTFIELDS => http_build_query($this->params)
+            CURLOPT_POSTFIELDS => is_array($this->params) ? http_build_query($this->params) : $this->params
         ]);
         
 
         $responve = curl_exec($this->curl);
-        $error = curl_error($this->curl);
-        if(!$error)
-            return $responve;
+        
+        if(curl_errno($this->curl))
+            throw new Exception(curl_error($this->curl));
+
+        return $responve;
+            
         
 
     }
@@ -279,6 +283,108 @@ class Curl {
             CURLOPT_COOKIE => "cookiename=0",
             CURLOPT_COOKIEFILE => $this->cookie_path
         ]);
+
+    }
+    /**
+     * Send request with post method
+     *
+     * @param string $url
+     * @param array $params
+     * 
+     */
+    public function post(string $url , array $params = []) {
+        return  $this->request('post' , $params , $url);
+    }
+    /**
+     * Send request with get method
+     *
+     * @param string $url
+     * @param array $params
+     * 
+     */
+    public function get(string $url , array $params = []) {
+        return $this->request('get' , $params , $url);
+    }
+    /**
+     * Send request with put method
+     *
+     * @param string $url
+     * @param array $params
+     * 
+     */
+    public function put(string $url , array $params = []) {
+        return  $this->request('put' , $params , $url);
+    }
+    /**
+     * Send request with delete method
+     *
+     * @param string $url
+     * @param array $params
+     * 
+     */
+    public function delete(string $url , array $params = []) {
+        return  $this->request('delete' , $params , $url);
+    }
+    /**
+     * Send request with patch method
+     *
+     * @param string $url
+     * @param array $params
+     * 
+     */
+    public function patch(string $url , array $params = []) {
+        return $this->request('patch' , $params , $url);
+    }
+    /**
+     * Send request with opations method
+     *
+     * @param string $url
+     * @param array $params
+     * 
+     */
+    public function opations(string $url , array $params = []) {
+        return  $this->request('get' , $params , $url);
+    }
+    /**
+     * Connect to a proxy server
+     *
+     * @param array $proxy
+     * @return void
+     */
+    public function setProxy(array $proxy) {
+        
+       
+       $this->curl_opation([
+            CURLOPT_HTTPPROXYTUNNEL => 1,
+            CURLOPT_PROXY => $proxy['ip'],
+            CURLOPT_PROXYPORT => $proxy['port']
+        ]);
+        if(isset($proxy['userpass'])) {
+            $this->curl_set_opt(CURLOPT_PROXYUSERPWD , $proxy['userpass']);
+        }
+
+    }
+    /**
+     * file download
+     *
+     * @param string $url
+     * @param string $path
+     * @return string
+     */
+    public function download(string $url ,string $path) {
+
+        $f = fopen($path , 'w+');
+        $this->curl_opation([
+            CURLOPT_TIMEOUT => 50,
+            CURLOPT_FILE => $f , 
+            CURLOPT_FOLLOWLOCATION => true
+        ]);
+
+        $fileContent = $this->request('get' , [] , $url)->send();
+        fwrite($f , $fileContent , strlen($fileContent));
+        fclose($f);
+
+        return $path;
 
     }
 
