@@ -5,7 +5,7 @@ namespace Mhmmdq\Request;
 use Mhmmdq\Request\Exception\Exception;
 use SimpleXMLElement;
 
-abstract class Encoder {
+class Encoder {
 
     /**
      * Encode JSON
@@ -16,7 +16,7 @@ abstract class Encoder {
      * @return string
      * @throws Exception
      */
-    protected function encodeJson() {
+    public static function encodeJson() {
 
         $args = func_get_args();
         $value = call_user_func_array('json_encode' , $args);
@@ -39,7 +39,7 @@ abstract class Encoder {
      * @param array $data
      * @return string
      */
-    protected function encodeXml(array $data) {
+    public static function encodeXml(array $data) {
 
         $xml = new SimpleXMLElement('<root/>');
         array_walk_recursive($data , [$xml , 'addChild']);
