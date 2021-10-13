@@ -261,12 +261,12 @@ class Curl {
         ]);
         
 
-        $responve = curl_exec($this->curl);
+        $response = curl_exec($this->curl);
         
         if(curl_errno($this->curl))
             throw new Exception(curl_error($this->curl));
 
-        return $responve;
+        return $response;
             
         
 
