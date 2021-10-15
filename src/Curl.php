@@ -70,7 +70,12 @@ class Curl {
      * @var array
      */
     protected $headers;
-
+    /**
+     * A presentation to maintain the response sent from the server
+     *
+     * @var array
+     */
+    protected $response;
 
     /**
      * Set up basic tasks
@@ -257,16 +262,28 @@ class Curl {
             CURLOPT_USERAGENT => $this->useragent,
             CURLOPT_CUSTOMREQUEST => $this->method ,
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POSTFIELDS => is_array($this->params) ? http_build_query($this->params) : $this->params
+            CURLOPT_POSTFIELDS => is_array($this->params) ? http_build_query($this->params) : $this->params,
+            CURLOPT_HEADER => 1,
+            CURLOPT_SSL_VERIFYPEER => 0,
+            CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_VERBOSE => 1
         ]);
         
+        $exec = curl_exec($this->curl);
 
-        $response = curl_exec($this->curl);
+        $header_size = curl_getinfo($this->curl,CURLINFO_HEADER_SIZE);
+
+        $this->response = [
+            'header' => substr($exec , 0 , $header_size),
+            'body' => substr($exec , $header_size) ,
+            'http_code' => curl_getinfo($this->curl , CURLINFO_HTTP_CODE) , 
+        ];
+
         
         if(curl_errno($this->curl))
             throw new Exception(curl_error($this->curl));
 
-        return $response;
+        return $this->response['body'];
             
         
 
@@ -387,5 +404,36 @@ class Curl {
         return $path;
 
     }
-
+    /**
+     * Get Http Headers
+     *
+     * @return string
+     */
+    public function getHttpHeaders() {
+        return $this->response['header'];
+    }
+    /** 
+     * Get Http Body
+     *
+     * @return string
+     */
+    public function getHttpBody() {
+        return $this->response['body'];
+    }
+    /**
+     * Get the entire Response from the server
+     *
+     * @return array
+     */
+    public function getRespose() {
+        return $this->response;
+    }
+    /**
+     * Get the Http code
+     *
+     * @return string
+     */
+    public function getHttpCode() {
+        return $this->response['http_code'];
+    }
 }
