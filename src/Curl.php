@@ -410,7 +410,7 @@ class Curl {
      * @return string
      */
     public function getHttpHeaders() {
-        return $this->response['header'];
+        return Decoder::http_parse_headers($this->response['header']);
     }
     /** 
      * Get Http Body
