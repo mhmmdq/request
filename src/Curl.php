@@ -289,6 +289,46 @@ class Curl {
 
     }
     /**
+     * Send information as Json
+     *
+     * @return string
+     */
+    public function sendJson( array $JsonData )
+    {
+        if($this->method == 'GET')
+        {
+            throw new Exception('It is not possible to send Json with the Get method');
+        }
+
+        $this->curl_opation([
+            CURLOPT_URL => $this->url,
+            CURLOPT_USERAGENT => $this->useragent,
+            CURLOPT_CUSTOMREQUEST => $this->method ,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POSTFIELDS => json_encode($JsonData),
+            CURLOPT_HEADER => 1,
+            CURLOPT_SSL_VERIFYPEER => 0,
+            CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_VERBOSE => 1
+        ]);
+        
+        $exec = curl_exec($this->curl);
+
+        $header_size = curl_getinfo($this->curl,CURLINFO_HEADER_SIZE);
+
+        $this->response = [
+            'header' => substr($exec , 0 , $header_size),
+            'body' => substr($exec , $header_size) ,
+            'http_code' => curl_getinfo($this->curl , CURLINFO_HTTP_CODE) , 
+        ];
+
+        
+        if(curl_errno($this->curl))
+            throw new Exception(curl_error($this->curl));
+
+        return $this->response['body'];
+    }
+    /**
      * Enable cookie usage
      *
      * @return void

@@ -1,3 +1,4 @@
 /vendor/
 log.txt
 index.php
+composer.lock
